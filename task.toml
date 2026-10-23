@@ -1,0 +1,27 @@
+schema_version = "1.3"
+
+[task]
+name = "local/impact-track-identify"
+authors = [{ name = "fengyin" }]
+description = "一台旧碰撞台架换了采集卡，回放文件中的轨迹通道编号失去对应关系。每组试验只剩入射、出射速度、切向差和转动变化，技术人员要据此找回试件对应的表面样本。"
+keywords = ['rigid-body', 'contact', 'parameter-recovery', 'global-assignment']
+
+[agent]
+timeout_sec = 3600
+
+[environment]
+build_timeout_sec = 600
+cpus = 2
+memory_mb = 2048
+storage_mb = 4096
+gpus = 0
+allow_internet = true
+
+[verifier]
+timeout_sec = 600
+
+[metadata]
+difficulty = "hard"
+category = "physics"
+tags = ['rigid-body', 'contact', 'parameter-recovery', 'global-assignment']
+expert_time_estimate = "70m"
