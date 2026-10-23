@@ -190,13 +190,33 @@ def test_output_is_compact_utf8_with_single_lf(tmp_path):
 
 
 def test_total_residual_matches_assignment(tmp_path):
-    """题面：「total_residual 是最终对应中所有 residual 之和。」"""
-    result, _, output = invoke(tmp_path, base_payload())
+    """题面：「total_residual 是最终对应中所有 residual 之和。」以及公开三元指纹公式。"""
+    payload = base_payload()
+    result, _, output = invoke(tmp_path, payload)
     document = read(output)
     total = sum(row["residual"] for row in document["surface_assignments"])
     assert result.returncode == 0
     assert document["total_residual"] == pytest.approx(total, abs=1e-12)
     assert document["total_residual"] == pytest.approx(0.0, abs=1e-10)
+    profiles = {
+        row["surface_id"]: row["fingerprint"] for row in payload["profiles"]
+    }
+    readings = {row["slot"]: row for row in payload["readings"]}
+    for assignment in document["surface_assignments"]:
+        reading = readings[assignment["slot"]]
+        temperature_factor = 1 + 0.004 * (reading["sample_temp_c"] - 23)
+        features = [
+            reading["outgoing_m_s"] / reading["incoming_m_s"],
+            abs(reading["tangential_delta_m_s"]) / reading["incoming_m_s"],
+            abs(reading["spin_delta_rad_s"])
+            / (reading["incoming_m_s"] * temperature_factor),
+        ]
+        features = [round(value, 12) for value in features]
+        expected = sum(
+            ((left - right) / (abs(left) + abs(right) + 1e-12)) ** 2
+            for left, right in zip(features, profiles[assignment["surface_id"]])
+        )
+        assert assignment["residual"] == pytest.approx(expected, abs=1e-12)
 
 
 def test_ceiling_accepts_inside_case(tmp_path):
